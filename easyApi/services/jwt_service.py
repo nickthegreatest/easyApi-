@@ -23,7 +23,7 @@ def generate_token(user_data: dict[str, Any]) -> str:
     """
     cfg = get_config()
     payload = {
-        "sub": user_data["id"],
+        "sub": str(user_data["id"]),
         "username": user_data["username"],
         "role": user_data["role"],
         "exp": datetime.now(timezone.utc) + timedelta(hours=cfg.JWT_EXPIRATION_HOURS),
@@ -48,7 +48,7 @@ def verify_token(token: str) -> dict[str, Any]:
     try:
         payload = jwt.decode(token, cfg.SECRET_KEY, algorithms=["HS256"])
         return {
-            "id": payload["sub"],
+            "id": int(payload["sub"]),
             "username": payload["username"],
             "role": payload["role"],
         }
