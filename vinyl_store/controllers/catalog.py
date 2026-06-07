@@ -1,4 +1,4 @@
-"""Контроллер каталога."""
+﻿"""РљРѕРЅС‚СЂРѕР»Р»РµСЂ РєР°С‚Р°Р»РѕРіР°."""
 
 from flask import Blueprint, request, jsonify
 
@@ -11,29 +11,29 @@ catalog_bp = Blueprint("catalog", __name__)
 @catalog_bp.route("/products")
 def get_products():
     """
-    Получить список товаров с фильтрами, сортировкой и пагинацией.
+    РџРѕР»СѓС‡РёС‚СЊ СЃРїРёСЃРѕРє С‚РѕРІР°СЂРѕРІ СЃ С„РёР»СЊС‚СЂР°РјРё, СЃРѕСЂС‚РёСЂРѕРІРєРѕР№ Рё РїР°РіРёРЅР°С†РёРµР№.
     
     Query params:
-        - page: номер страницы (default: 1)
-        - per_page: товаров на странице (default: 12)
-        - category: ID категории
-        - label: ID лейбла
-        - min_price: минимальная цена
-        - max_price: максимальная цена
-        - min_rating: минимальный рейтинг
-        - in_stock: только в наличии (1/0)
-        - is_new: только новинки (1/0)
-        - is_limited: только лимитированные (1/0)
-        - search: поиск по названию/артисту
-        - sort: поле сортировки (price, rating, title, artist, release_year, created_at)
-        - order: порядок (asc, desc)
+        - page: РЅРѕРјРµСЂ СЃС‚СЂР°РЅРёС†С‹ (default: 1)
+        - per_page: С‚РѕРІР°СЂРѕРІ РЅР° СЃС‚СЂР°РЅРёС†Рµ (default: 12)
+        - category: ID РєР°С‚РµРіРѕСЂРёРё
+        - label: ID Р»РµР№Р±Р»Р°
+        - min_price: РјРёРЅРёРјР°Р»СЊРЅР°СЏ С†РµРЅР°
+        - max_price: РјР°РєСЃРёРјР°Р»СЊРЅР°СЏ С†РµРЅР°
+        - min_rating: РјРёРЅРёРјР°Р»СЊРЅС‹Р№ СЂРµР№С‚РёРЅРі
+        - in_stock: С‚РѕР»СЊРєРѕ РІ РЅР°Р»РёС‡РёРё (1/0)
+        - is_new: С‚РѕР»СЊРєРѕ РЅРѕРІРёРЅРєРё (1/0)
+        - is_limited: С‚РѕР»СЊРєРѕ Р»РёРјРёС‚РёСЂРѕРІР°РЅРЅС‹Рµ (1/0)
+        - search: РїРѕРёСЃРє РїРѕ РЅР°Р·РІР°РЅРёСЋ/Р°СЂС‚РёСЃС‚Сѓ
+        - sort: РїРѕР»Рµ СЃРѕСЂС‚РёСЂРѕРІРєРё (price, rating, title, artist, release_year, created_at)
+        - order: РїРѕСЂСЏРґРѕРє (asc, desc)
     """
-    # Пагинация
+    # РџР°РіРёРЅР°С†РёСЏ
     page = max(1, int(request.args.get("page", 1)))
     per_page = min(50, max(1, int(request.args.get("per_page", 12))))
     offset = (page - 1) * per_page
 
-    # Фильтры
+    # Р¤РёР»СЊС‚СЂС‹
     category_id = int(request.args.get("category", 0)) or None
     label_id = int(request.args.get("label", 0)) or None
     min_price = float(request.args.get("min_price", 0)) or None
@@ -44,7 +44,7 @@ def get_products():
     is_limited = request.args.get("is_limited") == "1"
     search = request.args.get("search", "").strip() or None
 
-    # Сортировка
+    # РЎРѕСЂС‚РёСЂРѕРІРєР°
     sort_by = request.args.get("sort", "created_at")
     sort_order = request.args.get("order", "DESC")
 
@@ -88,12 +88,12 @@ def get_products():
 
 @catalog_bp.route("/products/<int:product_id>")
 def get_product(product_id):
-    """Получить详细信息 товара."""
+    """РџРѕР»СѓС‡РёС‚СЊиЇ¦з»†дїЎжЃЇ С‚РѕРІР°СЂР°."""
     product = ProductModel.get_by_id(product_id)
     if not product:
-        return jsonify({"error": "Товар не найден"}), 404
+        return jsonify({"error": "РўРѕРІР°СЂ РЅРµ РЅР°Р№РґРµРЅ"}), 404
 
-    # Получаем отзывы
+    # РџРѕР»СѓС‡Р°РµРј РѕС‚Р·С‹РІС‹
     from vinyl_store.models.review import ReviewModel
     reviews = ReviewModel.get_by_product(product_id, approved_only=True, limit=10)
     review_stats = ReviewModel.get_statistics(product_id)
@@ -106,24 +106,24 @@ def get_product(product_id):
 
 @catalog_bp.route("/products/<slug>")
 def get_product_by_slug(slug):
-    """Получить товар по slug."""
+    """РџРѕР»СѓС‡РёС‚СЊ С‚РѕРІР°СЂ РїРѕ slug."""
     product = ProductModel.get_by_slug(slug)
     if not product:
-        return jsonify({"error": "Товар не найден"}), 404
+        return jsonify({"error": "РўРѕРІР°СЂ РЅРµ РЅР°Р№РґРµРЅ"}), 404
 
     return jsonify(product)
 
 
 @catalog_bp.route("/categories")
 def get_categories():
-    """Получить все категории."""
+    """РџРѕР»СѓС‡РёС‚СЊ РІСЃРµ РєР°С‚РµРіРѕСЂРёРё."""
     categories = CategoryModel.get_with_counts()
     return jsonify({"categories": categories})
 
 
 @catalog_bp.route("/categories/<int:category_id>/products")
 def get_category_products(category_id):
-    """Получить товары категории."""
+    """РџРѕР»СѓС‡РёС‚СЊ С‚РѕРІР°СЂС‹ РєР°С‚РµРіРѕСЂРёРё."""
     page = max(1, int(request.args.get("page", 1)))
     per_page = min(50, max(1, int(request.args.get("per_page", 12))))
     offset = (page - 1) * per_page
@@ -136,7 +136,7 @@ def get_category_products(category_id):
 
     category = CategoryModel.get_by_id(category_id)
     if not category:
-        return jsonify({"error": "Категория не найдена"}), 404
+        return jsonify({"error": "РљР°С‚РµРіРѕСЂРёСЏ РЅРµ РЅР°Р№РґРµРЅР°"}), 404
 
     return jsonify({
         "category": category,
@@ -152,14 +152,14 @@ def get_category_products(category_id):
 
 @catalog_bp.route("/filters")
 def get_filters():
-    """Получить доступные фильтры."""
+    """РџРѕР»СѓС‡РёС‚СЊ РґРѕСЃС‚СѓРїРЅС‹Рµ С„РёР»СЊС‚СЂС‹."""
     filters = ProductModel.get_filters()
     return jsonify(filters)
 
 
 @catalog_bp.route("/new")
 def get_new_arrivals():
-    """Получить новые поступления."""
+    """РџРѕР»СѓС‡РёС‚СЊ РЅРѕРІС‹Рµ РїРѕСЃС‚СѓРїР»РµРЅРёСЏ."""
     limit = min(20, max(1, int(request.args.get("limit", 8))))
     products = ProductModel.get_new(limit=limit)
     return jsonify({"products": products})
@@ -167,7 +167,7 @@ def get_new_arrivals():
 
 @catalog_bp.route("/bestsellers")
 def get_bestsellers():
-    """Получить популярные товары."""
+    """РџРѕР»СѓС‡РёС‚СЊ РїРѕРїСѓР»СЏСЂРЅС‹Рµ С‚РѕРІР°СЂС‹."""
     limit = min(20, max(1, int(request.args.get("limit", 8))))
     products = ProductModel.get_bestsellers(limit=limit)
     return jsonify({"products": products})
@@ -175,7 +175,7 @@ def get_bestsellers():
 
 @catalog_bp.route("/sale")
 def get_on_sale():
-    """Получить товары со скидкой."""
+    """РџРѕР»СѓС‡РёС‚СЊ С‚РѕРІР°СЂС‹ СЃРѕ СЃРєРёРґРєРѕР№."""
     limit = min(20, max(1, int(request.args.get("limit", 8))))
     products = ProductModel.get_on_sale(limit=limit)
     return jsonify({"products": products})
@@ -183,10 +183,10 @@ def get_on_sale():
 
 @catalog_bp.route("/search")
 def search_products():
-    """Поиск товаров."""
+    """РџРѕРёСЃРє С‚РѕРІР°СЂРѕРІ."""
     query = request.args.get("q", "").strip()
     if not query or len(query) < 2:
-        return jsonify({"error": "Введите не менее 2 символов для поиска"}), 400
+        return jsonify({"error": "Р’РІРµРґРёС‚Рµ РЅРµ РјРµРЅРµРµ 2 СЃРёРјРІРѕР»РѕРІ РґР»СЏ РїРѕРёСЃРєР°"}), 400
 
     page = max(1, int(request.args.get("page", 1)))
     per_page = min(50, max(1, int(request.args.get("per_page", 12))))

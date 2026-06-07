@@ -1,4 +1,4 @@
-"""Пакет контроллеров VinylVault."""
+﻿"""РџР°РєРµС‚ РєРѕРЅС‚СЂРѕР»Р»РµСЂРѕРІ VinylVault."""
 
 from vinyl_store.controllers.auth import auth_bp
 from vinyl_store.controllers.catalog import catalog_bp

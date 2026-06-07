@@ -1,4 +1,4 @@
-"""Контроллер заказов."""
+﻿"""РљРѕРЅС‚СЂРѕР»Р»РµСЂ Р·Р°РєР°Р·РѕРІ."""
 
 import random
 from datetime import datetime
@@ -8,7 +8,7 @@ from flask import Blueprint, request, jsonify
 from vinyl_store.models.cart import CartModel
 from vinyl_store.models.order import OrderModel
 from vinyl_store.models.product import ProductModel
-from vinyl_store.services.security import token_required
+from easyApi import token_required
 
 orders_bp = Blueprint("orders", __name__)
 
@@ -16,14 +16,14 @@ orders_bp = Blueprint("orders", __name__)
 @orders_bp.route("/")
 @token_required
 def get_orders(current_user):
-    """Получить заказы текущего пользователя."""
+    """РџРѕР»СѓС‡РёС‚СЊ Р·Р°РєР°Р·С‹ С‚РµРєСѓС‰РµРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ."""
     page = max(1, int(request.args.get("page", 1)))
     per_page = min(50, max(1, int(request.args.get("per_page", 20))))
     offset = (page - 1) * per_page
 
     orders = OrderModel.get_by_user(current_user["id"], limit=per_page, offset=offset)
 
-    # Добавляем количество товаров в каждый заказ
+    # Р”РѕР±Р°РІР»СЏРµРј РєРѕР»РёС‡РµСЃС‚РІРѕ С‚РѕРІР°СЂРѕРІ РІ РєР°Р¶РґС‹Р№ Р·Р°РєР°Р·
     for order in orders:
         items = OrderModel.get_items(order["id"])
         order["items_count"] = sum(item["quantity"] for item in items)
@@ -40,14 +40,14 @@ def get_orders(current_user):
 @orders_bp.route("/<int:order_id>")
 @token_required
 def get_order(current_user, order_id):
-    """Получить详细信息 заказа."""
+    """РџРѕР»СѓС‡РёС‚СЊиЇ¦з»†дїЎжЃЇ Р·Р°РєР°Р·Р°."""
     order = OrderModel.get_full_order(order_id)
     if not order:
-        return jsonify({"error": "Заказ не найден"}), 404
+        return jsonify({"error": "Р—Р°РєР°Р· РЅРµ РЅР°Р№РґРµРЅ"}), 404
 
-    # Проверка доступа
+    # РџСЂРѕРІРµСЂРєР° РґРѕСЃС‚СѓРїР°
     if order["user_id"] != current_user["id"] and current_user["role"] not in ["admin", "manager"]:
-        return jsonify({"error": "Доступ запрещён"}), 403
+        return jsonify({"error": "Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰С‘РЅ"}), 403
 
     return jsonify(order)
 
@@ -55,22 +55,22 @@ def get_order(current_user, order_id):
 @orders_bp.route("/create", methods=["POST"])
 @token_required
 def create_order(current_user):
-    """Создать заказ из корзины."""
+    """РЎРѕР·РґР°С‚СЊ Р·Р°РєР°Р· РёР· РєРѕСЂР·РёРЅС‹."""
     data = request.get_json() or {}
 
-    # Получаем корзину
+    # РџРѕР»СѓС‡Р°РµРј РєРѕСЂР·РёРЅСѓ
     cart_items = CartModel.get_items(current_user["id"])
     if not cart_items:
-        return jsonify({"error": "Корзина пуста"}), 400
+        return jsonify({"error": "РљРѕСЂР·РёРЅР° РїСѓСЃС‚Р°"}), 400
 
-    # Проверяем наличие всех товаров
+    # РџСЂРѕРІРµСЂСЏРµРј РЅР°Р»РёС‡РёРµ РІСЃРµС… С‚РѕРІР°СЂРѕРІ
     for item in cart_items:
         if item["stock_quantity"] < item["quantity"]:
             return jsonify({
-                "error": f"Товар '{item['title']}' недоступен в нужном количестве",
+                "error": f"РўРѕРІР°СЂ '{item['title']}' РЅРµРґРѕСЃС‚СѓРїРµРЅ РІ РЅСѓР¶РЅРѕРј РєРѕР»РёС‡РµСЃС‚РІРµ",
             }), 400
 
-    # Данные доставки
+    # Р”Р°РЅРЅС‹Рµ РґРѕСЃС‚Р°РІРєРё
     shipping_data = {
         "address": data.get("address", "") or current_user.get("address", ""),
         "city": data.get("city", ""),
@@ -81,20 +81,20 @@ def create_order(current_user):
         "notes": data.get("notes", ""),
     }
 
-    # Валидация обязательных полей
+    # Р’Р°Р»РёРґР°С†РёСЏ РѕР±СЏР·Р°С‚РµР»СЊРЅС‹С… РїРѕР»РµР№
     if not shipping_data["address"]:
-        return jsonify({"error": "Адрес доставки обязателен"}), 400
+        return jsonify({"error": "РђРґСЂРµСЃ РґРѕСЃС‚Р°РІРєРё РѕР±СЏР·Р°С‚РµР»РµРЅ"}), 400
     if not shipping_data["city"]:
-        return jsonify({"error": "Город обязателен"}), 400
+        return jsonify({"error": "Р“РѕСЂРѕРґ РѕР±СЏР·Р°С‚РµР»РµРЅ"}), 400
     if not shipping_data["phone"]:
-        return jsonify({"error": "Телефон обязателен"}), 400
+        return jsonify({"error": "РўРµР»РµС„РѕРЅ РѕР±СЏР·Р°С‚РµР»РµРЅ"}), 400
 
     payment_method = data.get("payment_method", "card")
     if payment_method not in ["card", "cash", "online"]:
         payment_method = "card"
 
     try:
-        # Создаём заказ с транзакцией
+        # РЎРѕР·РґР°С‘Рј Р·Р°РєР°Р· СЃ С‚СЂР°РЅР·Р°РєС†РёРµР№
         result = OrderModel.create_order_with_items(
             user_id=current_user["id"],
             cart_items=cart_items,
@@ -102,55 +102,55 @@ def create_order(current_user):
             payment_method=payment_method,
         )
 
-        # Очищаем корзину
+        # РћС‡РёС‰Р°РµРј РєРѕСЂР·РёРЅСѓ
         CartModel.clear(current_user["id"])
 
         return jsonify({
-            "message": "Заказ успешно создан",
+            "message": "Р—Р°РєР°Р· СѓСЃРїРµС€РЅРѕ СЃРѕР·РґР°РЅ",
             "order": result,
         }), 201
 
     except Exception as e:
-        return jsonify({"error": f"Ошибка создания заказа: {str(e)}"}), 500
+        return jsonify({"error": f"РћС€РёР±РєР° СЃРѕР·РґР°РЅРёСЏ Р·Р°РєР°Р·Р°: {str(e)}"}), 500
 
 
 @orders_bp.route("/<int:order_id>/pay", methods=["POST"])
 @token_required
 def pay_order(current_user, order_id):
     """
-    Оплатить заказ (фейковая оплата).
-    Симулирует процесс оплаты с вероятностью успеха 95%.
+    РћРїР»Р°С‚РёС‚СЊ Р·Р°РєР°Р· (С„РµР№РєРѕРІР°СЏ РѕРїР»Р°С‚Р°).
+    РЎРёРјСѓР»РёСЂСѓРµС‚ РїСЂРѕС†РµСЃСЃ РѕРїР»Р°С‚С‹ СЃ РІРµСЂРѕСЏС‚РЅРѕСЃС‚СЊСЋ СѓСЃРїРµС…Р° 95%.
     """
     order = OrderModel.get_by_id(order_id)
     if not order:
-        return jsonify({"error": "Заказ не найден"}), 404
+        return jsonify({"error": "Р—Р°РєР°Р· РЅРµ РЅР°Р№РґРµРЅ"}), 404
 
-    # Проверка доступа
+    # РџСЂРѕРІРµСЂРєР° РґРѕСЃС‚СѓРїР°
     if order["user_id"] != current_user["id"] and current_user["role"] not in ["admin", "manager"]:
-        return jsonify({"error": "Доступ запрещён"}), 403
+        return jsonify({"error": "Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰С‘РЅ"}), 403
 
-    # Проверка статуса
+    # РџСЂРѕРІРµСЂРєР° СЃС‚Р°С‚СѓСЃР°
     if order["payment_status"] == "paid":
-        return jsonify({"error": "Заказ уже оплачен"}), 400
+        return jsonify({"error": "Р—Р°РєР°Р· СѓР¶Рµ РѕРїР»Р°С‡РµРЅ"}), 400
     if order["status"] in ["cancelled", "delivered"]:
-        return jsonify({"error": "Нельзя оплатить этот заказ"}), 400
+        return jsonify({"error": "РќРµР»СЊР·СЏ РѕРїР»Р°С‚РёС‚СЊ СЌС‚РѕС‚ Р·Р°РєР°Р·"}), 400
 
-    # Фейковая оплата
-    payment_success = random.random() < 0.95  # 95% успеха
+    # Р¤РµР№РєРѕРІР°СЏ РѕРїР»Р°С‚Р°
+    payment_success = random.random() < 0.95  # 95% СѓСЃРїРµС…Р°
 
     if payment_success:
         OrderModel.update_payment_status(order_id, "paid")
         OrderModel.update_status(order_id, "confirmed")
 
         return jsonify({
-            "message": "Оплата успешна",
+            "message": "РћРїР»Р°С‚Р° СѓСЃРїРµС€РЅР°",
             "payment_status": "paid",
             "order_status": "confirmed",
         })
     else:
         OrderModel.update_payment_status(order_id, "failed")
         return jsonify({
-            "error": "Платёж не прошёл. Попробуйте ещё раз.",
+            "error": "РџР»Р°С‚С‘Р¶ РЅРµ РїСЂРѕС€С‘Р». РџРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰С‘ СЂР°Р·.",
             "payment_status": "failed",
         }), 400
 
@@ -158,35 +158,35 @@ def pay_order(current_user, order_id):
 @orders_bp.route("/<int:order_id>/cancel", methods=["POST"])
 @token_required
 def cancel_order(current_user, order_id):
-    """Отменить заказ."""
+    """РћС‚РјРµРЅРёС‚СЊ Р·Р°РєР°Р·."""
     order = OrderModel.get_by_id(order_id)
     if not order:
-        return jsonify({"error": "Заказ не найден"}), 404
+        return jsonify({"error": "Р—Р°РєР°Р· РЅРµ РЅР°Р№РґРµРЅ"}), 404
 
-    # Проверка доступа
+    # РџСЂРѕРІРµСЂРєР° РґРѕСЃС‚СѓРїР°
     if order["user_id"] != current_user["id"] and current_user["role"] not in ["admin", "manager"]:
-        return jsonify({"error": "Доступ запрещён"}), 403
+        return jsonify({"error": "Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰С‘РЅ"}), 403
 
-    # Можно отменить только pending/confirmed
+    # РњРѕР¶РЅРѕ РѕС‚РјРµРЅРёС‚СЊ С‚РѕР»СЊРєРѕ pending/confirmed
     if order["status"] not in ["pending", "confirmed"]:
-        return jsonify({"error": "Нельзя отменить этот заказ"}), 400
+        return jsonify({"error": "РќРµР»СЊР·СЏ РѕС‚РјРµРЅРёС‚СЊ СЌС‚РѕС‚ Р·Р°РєР°Р·"}), 400
 
     OrderModel.cancel(order_id)
 
-    return jsonify({"message": "Заказ отменён"})
+    return jsonify({"message": "Р—Р°РєР°Р· РѕС‚РјРµРЅС‘РЅ"})
 
 
 @orders_bp.route("/<int:order_id>/invoice")
 @token_required
 def get_invoice(current_user, order_id):
-    """Получить счёт/чек заказа."""
+    """РџРѕР»СѓС‡РёС‚СЊ СЃС‡С‘С‚/С‡РµРє Р·Р°РєР°Р·Р°."""
     order = OrderModel.get_full_order(order_id)
     if not order:
-        return jsonify({"error": "Заказ не найден"}), 404
+        return jsonify({"error": "Р—Р°РєР°Р· РЅРµ РЅР°Р№РґРµРЅ"}), 404
 
-    # Проверка доступа
+    # РџСЂРѕРІРµСЂРєР° РґРѕСЃС‚СѓРїР°
     if order["user_id"] != current_user["id"] and current_user["role"] not in ["admin", "manager"]:
-        return jsonify({"error": "Доступ запрещён"}), 403
+        return jsonify({"error": "Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰С‘РЅ"}), 403
 
     return jsonify({
         "invoice": {

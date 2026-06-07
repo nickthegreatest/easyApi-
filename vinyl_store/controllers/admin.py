@@ -1,4 +1,4 @@
-"""Контроллер админ-панели."""
+﻿"""РљРѕРЅС‚СЂРѕР»Р»РµСЂ Р°РґРјРёРЅ-РїР°РЅРµР»Рё."""
 
 from flask import Blueprint, request, jsonify
 
@@ -7,27 +7,27 @@ from vinyl_store.models.product import ProductModel
 from vinyl_store.models.order import OrderModel
 from vinyl_store.models.category import CategoryModel
 from vinyl_store.models.review import ReviewModel
-from vinyl_store.services.security import token_required, admin_required, manager_required
+from easyApi import token_required, admin_required, manager_required
 
 admin_bp = Blueprint("admin", __name__)
 
 
-# === Дашборд ===
+# === Р”Р°С€Р±РѕСЂРґ ===
 
 @admin_bp.route("/dashboard")
 @manager_required
 def get_dashboard(current_user):
-    """Получить статистику для дашборда."""
+    """РџРѕР»СѓС‡РёС‚СЊ СЃС‚Р°С‚РёСЃС‚РёРєСѓ РґР»СЏ РґР°С€Р±РѕСЂРґР°."""
     order_stats = OrderModel.get_statistics()
 
-    # Статистика товаров
+    # РЎС‚Р°С‚РёСЃС‚РёРєР° С‚РѕРІР°СЂРѕРІ
     products_count = len(ProductModel.get_all(limit=1)[1]) if hasattr(ProductModel.get_all(), '__getitem__') else 0
     all_products, total_products = ProductModel.get_all(limit=1)
     low_stock = len([p for p in all_products if p.get("stock_quantity", 0) < 5])
 
-    # Статистика пользователей
+    # РЎС‚Р°С‚РёСЃС‚РёРєР° РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№
     users = UserModel.get_all(limit=1)
-    _, total_users = ([], len(users)) if not users else (users, 100)  # Упрощённо
+    _, total_users = ([], len(users)) if not users else (users, 100)  # РЈРїСЂРѕС‰С‘РЅРЅРѕ
 
     return jsonify({
         "orders": order_stats,
@@ -41,12 +41,12 @@ def get_dashboard(current_user):
     })
 
 
-# === Заказы ===
+# === Р—Р°РєР°Р·С‹ ===
 
 @admin_bp.route("/orders")
 @manager_required
 def get_all_orders(current_user):
-    """Получить все заказы (админ/менеджер)."""
+    """РџРѕР»СѓС‡РёС‚СЊ РІСЃРµ Р·Р°РєР°Р·С‹ (Р°РґРјРёРЅ/РјРµРЅРµРґР¶РµСЂ)."""
     page = max(1, int(request.args.get("page", 1)))
     per_page = min(50, max(1, int(request.args.get("per_page", 20))))
     offset = (page - 1) * per_page
@@ -79,10 +79,10 @@ def get_all_orders(current_user):
 @admin_bp.route("/orders/<int:order_id>")
 @manager_required
 def get_order_admin(current_user, order_id):
-    """Получить详细信息 заказа (админ/менеджер)."""
+    """РџРѕР»СѓС‡РёС‚СЊиЇ¦з»†дїЎжЃЇ Р·Р°РєР°Р·Р° (Р°РґРјРёРЅ/РјРµРЅРµРґР¶РµСЂ)."""
     order = OrderModel.get_full_order(order_id)
     if not order:
-        return jsonify({"error": "Заказ не найден"}), 404
+        return jsonify({"error": "Р—Р°РєР°Р· РЅРµ РЅР°Р№РґРµРЅ"}), 404
 
     return jsonify(order)
 
@@ -90,16 +90,16 @@ def get_order_admin(current_user, order_id):
 @admin_bp.route("/orders/<int:order_id>/status", methods=["PUT"])
 @admin_required
 def update_order_status(current_user, order_id):
-    """Обновить статус заказа (только админ)."""
+    """РћР±РЅРѕРІРёС‚СЊ СЃС‚Р°С‚СѓСЃ Р·Р°РєР°Р·Р° (С‚РѕР»СЊРєРѕ Р°РґРјРёРЅ)."""
     data = request.get_json()
     status = data.get("status")
 
     if not status:
-        return jsonify({"error": "status обязателен"}), 400
+        return jsonify({"error": "status РѕР±СЏР·Р°С‚РµР»РµРЅ"}), 400
 
     try:
         OrderModel.update_status(order_id, status)
-        return jsonify({"message": "Статус обновлён"})
+        return jsonify({"message": "РЎС‚Р°С‚СѓСЃ РѕР±РЅРѕРІР»С‘РЅ"})
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
 
@@ -107,10 +107,10 @@ def update_order_status(current_user, order_id):
 @admin_bp.route("/orders/<int:order_id>", methods=["PUT"])
 @admin_required
 def update_order(current_user, order_id):
-    """Обновить данные заказа (только админ)."""
+    """РћР±РЅРѕРІРёС‚СЊ РґР°РЅРЅС‹Рµ Р·Р°РєР°Р·Р° (С‚РѕР»СЊРєРѕ Р°РґРјРёРЅ)."""
     data = request.get_json()
 
-    # Разрешённые поля для обновления
+    # Р Р°Р·СЂРµС€С‘РЅРЅС‹Рµ РїРѕР»СЏ РґР»СЏ РѕР±РЅРѕРІР»РµРЅРёСЏ
     allowed_fields = [
         "shipping_address", "shipping_city", "shipping_postal_code",
         "shipping_country", "customer_phone", "customer_email",
@@ -119,38 +119,38 @@ def update_order(current_user, order_id):
     update_data = {k: v for k, v in data.items() if k in allowed_fields}
 
     if not update_data:
-        return jsonify({"error": "Нет допустимых полей для обновления"}), 400
+        return jsonify({"error": "РќРµС‚ РґРѕРїСѓСЃС‚РёРјС‹С… РїРѕР»РµР№ РґР»СЏ РѕР±РЅРѕРІР»РµРЅРёСЏ"}), 400
 
     OrderModel.update(order_id, update_data)
-    return jsonify({"message": "Заказ обновлён"})
+    return jsonify({"message": "Р—Р°РєР°Р· РѕР±РЅРѕРІР»С‘РЅ"})
 
 
 @admin_bp.route("/orders/<int:order_id>", methods=["DELETE"])
 @admin_required
 def delete_order(current_user, order_id):
-    """Удалить заказ (только админ)."""
+    """РЈРґР°Р»РёС‚СЊ Р·Р°РєР°Р· (С‚РѕР»СЊРєРѕ Р°РґРјРёРЅ)."""
     order = OrderModel.get_by_id(order_id)
     if not order:
-        return jsonify({"error": "Заказ не найден"}), 404
+        return jsonify({"error": "Р—Р°РєР°Р· РЅРµ РЅР°Р№РґРµРЅ"}), 404
 
-    # Нельзя удалить доставленный заказ
+    # РќРµР»СЊР·СЏ СѓРґР°Р»РёС‚СЊ РґРѕСЃС‚Р°РІР»РµРЅРЅС‹Р№ Р·Р°РєР°Р·
     if order["status"] == "delivered":
-        return jsonify({"error": "Нельзя удалить доставленный заказ"}), 400
+        return jsonify({"error": "РќРµР»СЊР·СЏ СѓРґР°Р»РёС‚СЊ РґРѕСЃС‚Р°РІР»РµРЅРЅС‹Р№ Р·Р°РєР°Р·"}), 400
 
-    # Удаляем позиции (каскадно)
+    # РЈРґР°Р»СЏРµРј РїРѕР·РёС†РёРё (РєР°СЃРєР°РґРЅРѕ)
     from easyApi import execute_query
     execute_query("DELETE", "order_items", where="order_id = %s", where_params=(order_id,))
     execute_query("DELETE", "orders", where="id = %s", where_params=(order_id,))
 
-    return jsonify({"message": "Заказ удалён"})
+    return jsonify({"message": "Р—Р°РєР°Р· СѓРґР°Р»С‘РЅ"})
 
 
-# === Товары ===
+# === РўРѕРІР°СЂС‹ ===
 
 @admin_bp.route("/products")
 @manager_required
 def get_all_products(current_user):
-    """Получить все товары (админ/менеджер)."""
+    """РџРѕР»СѓС‡РёС‚СЊ РІСЃРµ С‚РѕРІР°СЂС‹ (Р°РґРјРёРЅ/РјРµРЅРµРґР¶РµСЂ)."""
     page = max(1, int(request.args.get("page", 1)))
     per_page = min(50, max(1, int(request.args.get("per_page", 20))))
     offset = (page - 1) * per_page
@@ -171,14 +171,14 @@ def get_all_products(current_user):
 @admin_bp.route("/products", methods=["POST"])
 @admin_required
 def create_product(current_user):
-    """Создать товар (только админ)."""
+    """РЎРѕР·РґР°С‚СЊ С‚РѕРІР°СЂ (С‚РѕР»СЊРєРѕ Р°РґРјРёРЅ)."""
     data = request.get_json()
 
     required = ["title", "artist", "price"]
     if not all(k in data for k in required):
-        return jsonify({"error": f"Поля {required} обязательны"}), 400
+        return jsonify({"error": f"РџРѕР»СЏ {required} РѕР±СЏР·Р°С‚РµР»СЊРЅС‹"}), 400
 
-    # Генерируем slug
+    # Р“РµРЅРµСЂРёСЂСѓРµРј slug
     slug = data.get("slug", data["title"].lower().replace(" ", "-"))
 
     product_data = {
@@ -199,7 +199,7 @@ def create_product(current_user):
 
     result = ProductModel.create(product_data)
     return jsonify({
-        "message": "Товар создан",
+        "message": "РўРѕРІР°СЂ СЃРѕР·РґР°РЅ",
         "product_id": result["insert_id"],
     }), 201
 
@@ -207,32 +207,32 @@ def create_product(current_user):
 @admin_bp.route("/products/<int:product_id>", methods=["PUT"])
 @admin_required
 def update_product(current_user, product_id):
-    """Обновить товар (только админ)."""
+    """РћР±РЅРѕРІРёС‚СЊ С‚РѕРІР°СЂ (С‚РѕР»СЊРєРѕ Р°РґРјРёРЅ)."""
     data = request.get_json()
 
-    # Защита от изменения критических полей
+    # Р—Р°С‰РёС‚Р° РѕС‚ РёР·РјРµРЅРµРЅРёСЏ РєСЂРёС‚РёС‡РµСЃРєРёС… РїРѕР»РµР№
     protected = ["id", "slug", "created_at"]
     for field in protected:
         data.pop(field, None)
 
     ProductModel.update(product_id, data)
-    return jsonify({"message": "Товар обновлён"})
+    return jsonify({"message": "РўРѕРІР°СЂ РѕР±РЅРѕРІР»С‘РЅ"})
 
 
 @admin_bp.route("/products/<int:product_id>", methods=["DELETE"])
 @admin_required
 def delete_product(current_user, product_id):
-    """Удалить товар (только админ)."""
+    """РЈРґР°Р»РёС‚СЊ С‚РѕРІР°СЂ (С‚РѕР»СЊРєРѕ Р°РґРјРёРЅ)."""
     ProductModel.delete(product_id)
-    return jsonify({"message": "Товар удалён"})
+    return jsonify({"message": "РўРѕРІР°СЂ СѓРґР°Р»С‘РЅ"})
 
 
-# === Пользователи ===
+# === РџРѕР»СЊР·РѕРІР°С‚РµР»Рё ===
 
 @admin_bp.route("/users")
 @admin_required
 def get_all_users(current_user):
-    """Получить всех пользователей (только админ)."""
+    """РџРѕР»СѓС‡РёС‚СЊ РІСЃРµС… РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№ (С‚РѕР»СЊРєРѕ Р°РґРјРёРЅ)."""
     users = UserModel.get_all()
     return jsonify({"users": users})
 
@@ -240,26 +240,26 @@ def get_all_users(current_user):
 @admin_bp.route("/users/<int:user_id>", methods=["PUT"])
 @admin_required
 def update_user(current_user, user_id):
-    """Обновить пользователя (только админ)."""
+    """РћР±РЅРѕРІРёС‚СЊ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ (С‚РѕР»СЊРєРѕ Р°РґРјРёРЅ)."""
     data = request.get_json()
 
-    # Только определённые поля
+    # РўРѕР»СЊРєРѕ РѕРїСЂРµРґРµР»С‘РЅРЅС‹Рµ РїРѕР»СЏ
     allowed = ["role", "first_name", "last_name", "phone", "address"]
     update_data = {k: v for k, v in data.items() if k in allowed}
 
     if not update_data:
-        return jsonify({"error": "Нет допустимых полей"}), 400
+        return jsonify({"error": "РќРµС‚ РґРѕРїСѓСЃС‚РёРјС‹С… РїРѕР»РµР№"}), 400
 
     UserModel.update(user_id, update_data)
-    return jsonify({"message": "Пользователь обновлён"})
+    return jsonify({"message": "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РѕР±РЅРѕРІР»С‘РЅ"})
 
 
-# === Категории ===
+# === РљР°С‚РµРіРѕСЂРёРё ===
 
 @admin_bp.route("/categories")
 @manager_required
 def get_all_categories(current_user):
-    """Получить все категории."""
+    """РџРѕР»СѓС‡РёС‚СЊ РІСЃРµ РєР°С‚РµРіРѕСЂРёРё."""
     categories = CategoryModel.get_all()
     return jsonify({"categories": categories})
 
@@ -267,25 +267,25 @@ def get_all_categories(current_user):
 @admin_bp.route("/categories", methods=["POST"])
 @admin_required
 def create_category(current_user):
-    """Создать категорию."""
+    """РЎРѕР·РґР°С‚СЊ РєР°С‚РµРіРѕСЂРёСЋ."""
     data = request.get_json()
 
     if not all(k in data for k in ["name", "slug"]):
-        return jsonify({"error": "name и slug обязательны"}), 400
+        return jsonify({"error": "name Рё slug РѕР±СЏР·Р°С‚РµР»СЊРЅС‹"}), 400
 
     result = CategoryModel.create(data["name"], data["slug"], data.get("description", ""))
     return jsonify({
-        "message": "Категория создана",
+        "message": "РљР°С‚РµРіРѕСЂРёСЏ СЃРѕР·РґР°РЅР°",
         "category_id": result["insert_id"],
     }), 201
 
 
-# === Отзывы ===
+# === РћС‚Р·С‹РІС‹ ===
 
 @admin_bp.route("/reviews/pending")
 @manager_required
 def get_pending_reviews(current_user):
-    """Получить отзывы на модерацию."""
+    """РџРѕР»СѓС‡РёС‚СЊ РѕС‚Р·С‹РІС‹ РЅР° РјРѕРґРµСЂР°С†РёСЋ."""
     reviews = ReviewModel.get_pending(limit=50)
     return jsonify({"reviews": reviews})
 
@@ -293,22 +293,22 @@ def get_pending_reviews(current_user):
 @admin_bp.route("/reviews/<int:review_id>/approve", methods=["POST"])
 @manager_required
 def approve_review(current_user, review_id):
-    """Одобрить отзыв."""
+    """РћРґРѕР±СЂРёС‚СЊ РѕС‚Р·С‹РІ."""
     ReviewModel.approve(review_id)
-    return jsonify({"message": "Отзыв одобрен"})
+    return jsonify({"message": "РћС‚Р·С‹РІ РѕРґРѕР±СЂРµРЅ"})
 
 
 @admin_bp.route("/reviews/<int:review_id>/reject", methods=["POST"])
 @manager_required
 def reject_review(current_user, review_id):
-    """Отклонить отзыв."""
+    """РћС‚РєР»РѕРЅРёС‚СЊ РѕС‚Р·С‹РІ."""
     ReviewModel.reject(review_id)
-    return jsonify({"message": "Отзыв отклонён"})
+    return jsonify({"message": "РћС‚Р·С‹РІ РѕС‚РєР»РѕРЅС‘РЅ"})
 
 
 @admin_bp.route("/reviews/<int:review_id>", methods=["DELETE"])
 @admin_required
 def delete_review(current_user, review_id):
-    """Удалить отзыв (только админ)."""
+    """РЈРґР°Р»РёС‚СЊ РѕС‚Р·С‹РІ (С‚РѕР»СЊРєРѕ Р°РґРјРёРЅ)."""
     ReviewModel.delete(review_id)
-    return jsonify({"message": "Отзыв удалён"})
+    return jsonify({"message": "РћС‚Р·С‹РІ СѓРґР°Р»С‘РЅ"})

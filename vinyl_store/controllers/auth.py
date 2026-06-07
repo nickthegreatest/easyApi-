@@ -1,17 +1,17 @@
-"""Контроллер аутентификации."""
+﻿"""РљРѕРЅС‚СЂРѕР»Р»РµСЂ Р°СѓС‚РµРЅС‚РёС„РёРєР°С†РёРё."""
 
 from flask import Blueprint, request, jsonify, session
 
 from easyApi import generate_token
 from vinyl_store.models.user import UserModel
-from vinyl_store.services.security import token_required
+from easyApi import token_required
 
 auth_bp = Blueprint("auth", __name__)
 
 
 @auth_bp.route("/register", methods=["POST"])
 def register():
-    """Регистрация нового пользователя."""
+    """Р РµРіРёСЃС‚СЂР°С†РёСЏ РЅРѕРІРѕРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ."""
     data = request.get_json(silent=True) or {}
 
     username = data.get("username", "").strip()
@@ -20,30 +20,30 @@ def register():
     first_name = data.get("first_name", "").strip()
     last_name = data.get("last_name", "").strip()
 
-    # Валидация
+    # Р’Р°Р»РёРґР°С†РёСЏ
     errors = []
     if len(username) < 3:
-        errors.append("username должен быть не менее 3 символов")
+        errors.append("username РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РЅРµ РјРµРЅРµРµ 3 СЃРёРјРІРѕР»РѕРІ")
     if len(username) > 50:
-        errors.append("username должен быть не более 50 символов")
+        errors.append("username РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РЅРµ Р±РѕР»РµРµ 50 СЃРёРјРІРѕР»РѕРІ")
     if "@" not in email or len(email) > 100:
-        errors.append("Некорректный email")
+        errors.append("РќРµРєРѕСЂСЂРµРєС‚РЅС‹Р№ email")
     if len(password) < 6:
-        errors.append("Пароль должен быть не менее 6 символов")
+        errors.append("РџР°СЂРѕР»СЊ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РЅРµ РјРµРЅРµРµ 6 СЃРёРјРІРѕР»РѕРІ")
 
     if errors:
         return jsonify({"errors": errors}), 400
 
-    # Проверка на дубликат
+    # РџСЂРѕРІРµСЂРєР° РЅР° РґСѓР±Р»РёРєР°С‚
     if UserModel.get_by_username(username):
-        return jsonify({"error": "username уже занят"}), 409
+        return jsonify({"error": "username СѓР¶Рµ Р·Р°РЅСЏС‚"}), 409
     if UserModel.get_by_email(email):
-        return jsonify({"error": "email уже зарегистрирован"}), 409
+        return jsonify({"error": "email СѓР¶Рµ Р·Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°РЅ"}), 409
 
-    # Создание пользователя
+    # РЎРѕР·РґР°РЅРёРµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
     result = UserModel.create(username, email, password, first_name, last_name)
 
-    # Генерация токена
+    # Р“РµРЅРµСЂР°С†РёСЏ С‚РѕРєРµРЅР°
     token = generate_token({
         "id": result["insert_id"],
         "username": username,
@@ -51,7 +51,7 @@ def register():
     })
 
     return jsonify({
-        "message": "Пользователь зарегистрирован",
+        "message": "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ Р·Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°РЅ",
         "user_id": result["insert_id"],
         "token": token,
         "user": {
@@ -66,24 +66,24 @@ def register():
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
-    """Вход в систему."""
+    """Р’С…РѕРґ РІ СЃРёСЃС‚РµРјСѓ."""
     data = request.get_json(silent=True) or {}
 
     username_or_email = data.get("username", "").strip()
     password = data.get("password", "")
 
     if not username_or_email or not password:
-        return jsonify({"error": "username/email и пароль обязательны"}), 400
+        return jsonify({"error": "username/email Рё РїР°СЂРѕР»СЊ РѕР±СЏР·Р°С‚РµР»СЊРЅС‹"}), 400
 
-    # Поиск пользователя
+    # РџРѕРёСЃРє РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
     user = UserModel.get_by_username(username_or_email)
     if not user:
         user = UserModel.get_by_email(username_or_email)
 
     if not user or not UserModel.check_password(user["id"], password):
-        return jsonify({"error": "Неверные учётные данные"}), 401
+        return jsonify({"error": "РќРµРІРµСЂРЅС‹Рµ СѓС‡С‘С‚РЅС‹Рµ РґР°РЅРЅС‹Рµ"}), 401
 
-    # Генерация токена
+    # Р“РµРЅРµСЂР°С†РёСЏ С‚РѕРєРµРЅР°
     token = generate_token({
         "id": user["id"],
         "username": user["username"],
@@ -93,7 +93,7 @@ def login():
     })
 
     return jsonify({
-        "message": "Успешный вход",
+        "message": "РЈСЃРїРµС€РЅС‹Р№ РІС…РѕРґ",
         "token": token,
         "user": {
             "id": user["id"],
@@ -109,10 +109,10 @@ def login():
 @auth_bp.route("/me")
 @token_required
 def get_current_user(current_user):
-    """Получить данные текущего пользователя."""
+    """РџРѕР»СѓС‡РёС‚СЊ РґР°РЅРЅС‹Рµ С‚РµРєСѓС‰РµРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ."""
     user = UserModel.get_by_id(current_user["id"])
     if not user:
-        return jsonify({"error": "Пользователь не найден"}), 404
+        return jsonify({"error": "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ"}), 404
 
     return jsonify({
         "id": user["id"],
@@ -130,38 +130,38 @@ def get_current_user(current_user):
 @auth_bp.route("/profile", methods=["PUT"])
 @token_required
 def update_profile(current_user):
-    """Обновить профиль пользователя."""
+    """РћР±РЅРѕРІРёС‚СЊ РїСЂРѕС„РёР»СЊ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ."""
     data = request.get_json()
 
     allowed_fields = ["first_name", "last_name", "phone", "address"]
     update_data = {k: v for k, v in data.items() if k in allowed_fields}
 
     if not update_data:
-        return jsonify({"error": "Нет данных для обновления"}), 400
+        return jsonify({"error": "РќРµС‚ РґР°РЅРЅС‹С… РґР»СЏ РѕР±РЅРѕРІР»РµРЅРёСЏ"}), 400
 
     UserModel.update(current_user["id"], update_data)
 
-    return jsonify({"message": "Профиль обновлён"})
+    return jsonify({"message": "РџСЂРѕС„РёР»СЊ РѕР±РЅРѕРІР»С‘РЅ"})
 
 
 @auth_bp.route("/change-password", methods=["POST"])
 @token_required
 def change_password(current_user):
-    """Сменить пароль."""
+    """РЎРјРµРЅРёС‚СЊ РїР°СЂРѕР»СЊ."""
     data = request.get_json()
 
     old_password = data.get("old_password", "")
     new_password = data.get("new_password", "")
 
     if not old_password or not new_password:
-        return jsonify({"error": "old_password и new_password обязательны"}), 400
+        return jsonify({"error": "old_password Рё new_password РѕР±СЏР·Р°С‚РµР»СЊРЅС‹"}), 400
 
     if not UserModel.check_password(current_user["id"], old_password):
-        return jsonify({"error": "Неверный текущий пароль"}), 401
+        return jsonify({"error": "РќРµРІРµСЂРЅС‹Р№ С‚РµРєСѓС‰РёР№ РїР°СЂРѕР»СЊ"}), 401
 
     if len(new_password) < 6:
-        return jsonify({"error": "Новый пароль должен быть не менее 6 символов"}), 400
+        return jsonify({"error": "РќРѕРІС‹Р№ РїР°СЂРѕР»СЊ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РЅРµ РјРµРЅРµРµ 6 СЃРёРјРІРѕР»РѕРІ"}), 400
 
     UserModel.change_password(current_user["id"], new_password)
 
-    return jsonify({"message": "Пароль изменён"})
+    return jsonify({"message": "РџР°СЂРѕР»СЊ РёР·РјРµРЅС‘РЅ"})
