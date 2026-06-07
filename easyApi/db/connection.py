@@ -49,6 +49,10 @@ def execute_query(
     where_params: tuple[Any, ...] | list[Any] | None = None,
     columns: str = "*",
     join: str | None = None,
+    order: str | None = None,
+    group_by: str | None = None,
+    limit: int | None = None,
+    offset: int | None = None,
 ) -> OperationResult:
     """Универсальный метод для выполнения CRUD-запросов.
 
@@ -85,6 +89,14 @@ def execute_query(
             if where:
                 sql += f" WHERE {where}"
                 query_params = list(where_params or [])
+            if group_by:
+                sql += f" GROUP BY {group_by}"
+            if order:
+                sql += f" ORDER BY {order}"
+            if limit:
+                sql += f" LIMIT {limit}"
+            if offset:
+                sql += f" OFFSET {offset}"
             cursor.execute(sql, query_params)
             return list(cursor.fetchall())
 
