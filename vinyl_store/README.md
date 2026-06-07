@@ -1,224 +1,229 @@
-# 🎵 VinylVault
+# Vintage Vinyl Store
 
-Интернет-магазин виниловых пластинок на базе библиотеки **easyApi**.
+Полноценный дипломный проект интернет-магазина виниловых пластинок, построенный на собственной библиотеке **EasyApi** — обёртке над Flask и PyMySQL для быстрой разработки REST API.
 
-## 🚀 Возможности
+## Цель проекта
 
-### Для покупателей:
-- ✅ Просмотр каталога с фильтрами и сортировками (в реальном времени)
-- ✅ Поиск по названию и артисту
-- ✅ Регистрация и авторизация (JWT)
-- ✅ Корзина товаров
-- ✅ Оформление заказа с доставкой
-- ✅ Фейковая оплата (95% успех)
-- ✅ Просмотр истории заказов
-- ✅ Отмена заказов
+Проект демонстрирует возможности библиотеки без Django, FastAPI, SQLAlchemy, Peewee и других ORM:
 
-### Для гостей:
-- ✅ Просмотр каталога
-- ✅ Фильтры и сортировки
-- ✅ Поиск товаров
+- автоматизированное подключение к MySQL через EasyApi и PyMySQL;
+- CRUD-операции через SQL-запросы и helper-функции библиотеки;
+- маршрутизацию через Flask/EasyApi-декораторы;
+- JWT-аутентификацию через PyJWT;
+- хеширование паролей через Werkzeug;
+- централизованную обработку ошибок;
+- стандартизированные JSON-ответы формата `{ success, message, data }`.
 
-### Для администраторов и менеджеров:
-- ✅ Дашборд со статистикой
-- ✅ Просмотр всех заказов
-- ✅ Управление статусами заказов (админ)
-- ✅ Редактирование заказов (админ)
-- ✅ Удаление заказов (админ)
-- ✅ Управление товарами (админ)
-- ✅ Модерация отзывов (менеджер+)
+## Анализ существующей БД
 
-## 📁 Структура проекта
+Приложение построено вокруг уже существующих таблиц и не требует создания новой структуры БД. Используются таблицы:
 
-```
+| Таблица | Назначение |
+| --- | --- |
+| `users` | пользователи, роли `user`, `manager`, `admin`, профиль и пароль |
+| `products` | виниловые пластинки, цена, остатки, жанр, лейбл, рейтинг |
+| `categories` | жанры и фильтрация каталога |
+| `labels` | музыкальные лейблы |
+| `cart_items` | корзина пользователя |
+| `orders` | заказы, доставка, оплата, скидки |
+| `order_items` | снимок состава заказа |
+| `reviews` | отзывы с модерацией |
+| `wishlist` | избранные товары |
+| `promo_codes` | процентные и фиксированные промокоды |
+| `view_history` | история просмотра карточек товаров |
+
+Файл `schema.sql` оставлен как справочная демонстрационная схема/seed для локальной проверки. Если ваша база уже создана, импортировать его не нужно.
+
+## Структура
+
+```text
 vinyl-store/
-├── app.py                 # Точка входа (Flask приложение)
-├── config.py              # Конфигурация (ENV переменные)
-├── schema.sql             # SQL схема БД с демо данными
-├── requirements.txt       # Python зависимости
-├── __init__.py
-├── models/
-│   ├── __init__.py
-│   ├── user.py           # Модель пользователя
-│   ├── category.py       # Категории
-│   ├── product.py        # Товары с фильтрами
-│   ├── cart.py           # Корзина
-│   ├── order.py          # Заказы
-│   └── review.py         # Отзывы
-├── controllers/
-│   ├── __init__.py
-│   ├── auth.py           # Авторизация/регистрация
-│   ├── catalog.py        # Каталог товаров
-│   ├── cart.py           # Корзина
-│   ├── orders.py         # Заказы и оплата
-│   └── admin.py          # Админ-панель
-├── services/
-│   └── __init__.py       # Безопасность
-├── templates/
-│   └── index.html        # SPA шаблон
-└── static/
-    ├── css/
-    │   └── style.css     # Винтажный дизайн
-    └── js/
-        └── app.js        # Фронтенд логика
+├── app.py
+├── config.py
+├── vinyl_store/
+│   ├── app.py
+│   ├── config.py
+│   ├── controllers/
+│   ├── services/
+│   ├── repositories/
+│   ├── middleware/
+│   ├── validators/
+│   └── routes/
+├── templates/            # внутри vinyl_store/templates
+├── static/               # внутри vinyl_store/static
+│   ├── css/
+│   ├── js/
+│   └── images/
+└── uploads/
 ```
 
-## 🛠 Установка
+### Слои приложения
 
-### 1. Клонирование и подготовка
+- **Controllers** — только HTTP: читают request, вызывают validators/services, возвращают JSON.
+- **Services** — бизнес-логика: регистрация, корзина, checkout, промокоды, модерация.
+- **Repositories** — только SQL через EasyApi/PyMySQL, без ORM-моделей.
+- **Middleware** — JWT, единые ошибки, логирование, стандартные JSON-ответы.
+- **Validators** — проверка всех входящих JSON-полей.
+- **Routes** — регистрация blueprint-ов.
 
-```bash
-cd vinyl-store
+## REST API
+
+Все ответы имеют формат:
+
+```json
+{
+  "success": true,
+  "message": "OK",
+  "data": {}
+}
 ```
 
-### 2. Установка зависимостей
+Для защищённых endpoint-ов передавайте JWT:
+
+```http
+Authorization: Bearer <token>
+```
+
+### Гость
+
+```http
+POST   /register
+POST   /login
+GET    /products?q=beatles&genre=rock&sort=rating
+GET    /products/1
+GET    /categories
+GET    /reviews/1
+```
+
+### Пользователь
+
+```http
+GET    /profile
+POST   /cart
+GET    /cart
+PUT    /cart/{product_id}
+DELETE /cart/{cart_item_id}
+POST   /wishlist
+GET    /wishlist
+DELETE /wishlist/{product_id}
+POST   /orders
+GET    /orders
+POST   /reviews
+```
+
+### Администратор
+
+```http
+GET    /admin/stats
+GET    /admin/users
+GET    /admin/orders
+PUT    /admin/orders/{id}
+POST   /admin/products
+PUT    /admin/products/{id}
+DELETE /admin/products/{id}
+POST   /admin/categories
+PUT    /admin/categories/{id}
+DELETE /admin/categories/{id}
+GET    /admin/reviews
+PUT    /admin/reviews/{id}
+DELETE /admin/reviews/{id}
+```
+
+## Примеры API-запросов
+
+### Регистрация
 
 ```bash
+curl -X POST http://localhost:5000/register \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"collector","email":"collector@example.com","password":"secret123"}'
+```
+
+### Вход
+
+```bash
+curl -X POST http://localhost:5000/login \
+  -H 'Content-Type: application/json' \
+  -d '{"identity":"collector","password":"secret123"}'
+```
+
+### Поиск пластинок
+
+```bash
+curl 'http://localhost:5000/products?q=pink&genre=rock&sort=rating'
+```
+
+### Добавление в корзину
+
+```bash
+curl -X POST http://localhost:5000/cart \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer <JWT>' \
+  -d '{"product_id":1,"quantity":2}'
+```
+
+### Оформление заказа с промокодом
+
+```bash
+curl -X POST http://localhost:5000/orders \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer <JWT>' \
+  -d '{"shipping_address":"Nevsky Prospect, 1","shipping_city":"Saint Petersburg","customer_phone":"+79990000000","promo_code":"VINYL20"}'
+```
+
+### Создание товара администратором
+
+```bash
+curl -X POST http://localhost:5000/admin/products \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer <ADMIN_JWT>' \
+  -d '{"title":"Blue Train","artist":"John Coltrane","slug":"blue-train-coltrane","price":3190,"stock_quantity":7,"category_id":3,"label_id":7}'
+```
+
+## Запуск
+
+### 1. Установить зависимости
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3. Создание базы данных
+### 2. Настроить подключение к существующей MySQL БД
+
+Можно использовать переменные окружения:
 
 ```bash
-# Войдите в MySQL
-mysql -u root -p
-
-# Создайте базу данных
-CREATE DATABASE vinyl_store CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE vinyl_store;
-
-# Импортируйте схему с демо данными
-source schema.sql;
+export DB_HOST=localhost
+export DB_USER=root
+export DB_PASSWORD=your_password
+export DB_NAME=vinyl_store
+export DB_PORT=3306
+export SECRET_KEY='replace-me'
 ```
 
-### 4. Конфигурация
-
-Скопируйте `.env.example` в `.env` и настройте:
-
-```bash
-cp .env.example .env
-```
-
-Откройте `.env` и укажите ваши параметры (особенно пароль БД):
-
-```bash
-# База данных
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your_password
-DB_NAME=vinyl_store
-```
-
-## 🏃 Запуск
+### 3. Запустить
 
 ```bash
 python app.py
 ```
 
-Приложение будет доступно по адресу: **http://localhost:5000**
+Откройте http://localhost:5000.
 
-## 🔑 Тестовые учётные данные
+## Frontend
 
-После импорта `schema.sql` доступны:
+Клиентская часть написана без React/Vue/Angular:
 
-| Роль | Username | Email | Пароль |
-|------|----------|-------|--------|
-| Admin | `admin` | admin@vinylvault.ru | `admin123` |
-| Manager | `manager` | manager@vinylvault.ru | `manager123` |
-| User | `john_doe` | john@example.com | `password123` |
+- HTML5 шаблон `templates/index.html`;
+- CSS3 с адаптивной сеткой, ретро-шрифтами, тёмным деревом, бежевыми тонами и золотыми акцентами;
+- JavaScript ES6 modules + Fetch API;
+- страницы: главная, каталог, карточка товара, корзина, избранное, профиль, история заказов, вход, регистрация, админ-панель.
 
-## 📡 API Endpoints
+## Безопасность
 
-### Авторизация
-- `POST /api/auth/register` — Регистрация
-- `POST /api/auth/login` — Вход
-- `GET /api/auth/me` — Текущий пользователь
-- `PUT /api/auth/profile` — Обновление профиля
-- `POST /api/auth/change-password` — Смена пароля
-
-### Каталог
-- `GET /api/products` — Список товаров (с фильтрами)
-- `GET /api/products/:id` — Детали товара
-- `GET /api/categories` — Категории
-- `GET /api/filters` — Доступные фильтры
-- `GET /api/new` — Новинки
-- `GET /api/bestsellers` — Популярное
-- `GET /api/sale` — Со скидкой
-- `GET /api/search?q=` — Поиск
-
-### Корзина (требуется авторизация)
-- `GET /api/cart/` — Получить корзину
-- `POST /api/cart/add` — Добавить товар
-- `POST /api/cart/update` — Обновить количество
-- `POST /api/cart/remove` — Удалить товар
-- `POST /api/cart/clear` — Очистить корзину
-
-### Заказы (требуется авторизация)
-- `GET /api/orders/` — Мои заказы
-- `GET /api/orders/:id` — Детали заказа
-- `POST /api/orders/create` — Создать заказ
-- `POST /api/orders/:id/pay` — Оплатить заказ
-- `POST /api/orders/:id/cancel` — Отменить заказ
-- `GET /api/orders/:id/invoice` — Счёт заказа
-
-### Админ-панель (требуется роль admin/manager)
-- `GET /api/admin/dashboard` — Дашборд
-- `GET /api/admin/orders` — Все заказы
-- `PUT /api/admin/orders/:id/status` — Статус заказа (admin)
-- `PUT /api/admin/orders/:id` — Редактировать заказ (admin)
-- `DELETE /api/admin/orders/:id` — Удалить заказ (admin)
-- `GET /api/admin/products` — Все товары
-- `POST /api/admin/products` — Создать товар (admin)
-- `PUT /api/admin/products/:id` — Обновить товар (admin)
-- `DELETE /api/admin/products/:id` — Удалить товар (admin)
-- `GET /api/admin/users` — Все пользователи (admin)
-- `GET /api/admin/reviews/pending` — Отзывы на модерации
-- `POST /api/admin/reviews/:id/approve` — Одобрить отзыв
-- `POST /api/admin/reviews/:id/reject` — Отклонить отзыв
-
-## 🎨 Дизайн
-
-Винтажный стиль с тёплой цветовой палитрой:
-- 🎨 Коричневые и бежевые тона
-- 📀 Акцент на изображения пластинок
-- 🎯 Интуитивная навигация
-- 📱 Адаптивный дизайн (mobile-friendly)
-
-## 📦 Используемые технологии
-
-- **Backend:** Python 3.10+, Flask, easyApi
-- **Database:** MySQL 8.0+
-- **Frontend:** Vanilla JavaScript, CSS3
-- **Authentication:** JWT
-- **Security:** Password hashing (Werkzeug)
-
-## 🔒 Безопасность
-
-- ✅ Хеширование паролей
-- ✅ JWT аутентификация
-- ✅ Ролевая модель (user/manager/admin)
-- ✅ Защита API endpoints
-- ✅ Валидация входных данных
-- ✅ Транзакции для заказов
-
-## 📝 Примечания
-
-- Оплата **фейковая** (симуляция с 95% вероятностью успеха)
-- Все изображения товаров используют placeholder (замените на реальные)
-- Демо данные включают 10 товаров, 3 пользователей, 2 промокода
-
-## 🤝 Вклад в развитие
-
-1. Fork проекта
-2. Создайте feature branch
-3. Commit изменения
-4. Push в branch
-5. Создайте Pull Request
-
-## 📄 Лицензия
-
-MIT License — свободное использование.
-
----
-
-**VinylVault** © 2024. Создано с 🎵 для любителей винила.
+- SQL-инъекции предотвращаются параметризованными запросами `%s` PyMySQL.
+- Пароли хешируются Werkzeug `generate_password_hash`.
+- JWT проверяется middleware перед защищёнными маршрутами.
+- Все входящие payload-ы проходят validators.
+- Исключения приводятся к единому JSON-формату middleware-обработчиком.

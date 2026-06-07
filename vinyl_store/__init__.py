@@ -1,3 +1,5 @@
-"""VinylVault — Интернет-магазин виниловых пластинок."""
+"""Vintage Vinyl Store diploma demo package."""
 
-__version__ = "1.0.0"
+from vinyl_store.app import app, kit
+
+__all__ = ["app", "kit"]

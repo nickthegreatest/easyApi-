@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+  <rect width="600" height="600" fill="#2b1810"/>
+  <circle cx="300" cy="300" r="220" fill="#090706"/>
+  <circle cx="300" cy="300" r="170" fill="none" stroke="#24201d" stroke-width="7"/>
+  <circle cx="300" cy="300" r="90" fill="#9d2f24"/>
+  <circle cx="300" cy="300" r="24" fill="#d4a64a"/>
+  <text x="300" y="540" fill="#f4dfb8" font-family="serif" font-size="34" text-anchor="middle">Vintage Vinyl</text>
+</svg>

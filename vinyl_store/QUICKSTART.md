@@ -1,68 +1,19 @@
-# 🚀 Быстрый старт VinylVault
+# Quickstart: Vintage Vinyl Store
 
-## Установка за 5 минут
-
-### Шаг 1: Установите зависимости
 ```bash
+cd /workspace/easyApi-
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-```
-
-### Шаг 2: Создайте базу данных
-```bash
-# Для Windows (PowerShell)
-mysql -u root -p < setup_db.sql
-
-# Для Linux/Mac
-mysql -u root -p < setup_db.sql
-```
-
-### Шаг 3: Настройте .env
-Откройте `.env` и укажите пароль от MySQL:
-```
-DB_PASSWORD=your_password
-```
-
-### Шаг 4: Запустите приложение
-```bash
+export DB_HOST=localhost DB_USER=root DB_PASSWORD=your_password DB_NAME=vinyl_store
 python app.py
 ```
 
-### Шаг 5: Откройте в браузере
+Откройте http://localhost:5000.
+
+Проверка API:
+
+```bash
+curl http://localhost:5000/health
+curl http://localhost:5000/products
 ```
-http://localhost:5000
-```
-
-## 🎯 Готово!
-
-Теперь вы можете:
-- ✅ Просматривать каталог виниловых пластинок
-- ✅ Искать и фильтровать товары
-- ✅ Зарегистрироваться и войти
-- ✅ Добавлять товары в корзину
-- ✅ Оформлять заказы
-
-## 🔑 Тестовые аккаунты
-
-| Роль | Логин | Пароль |
-|------|-------|--------|
-| Admin | admin | admin123 |
-| Manager | manager | manager123 |
-| User | john_doe | password123 |
-
-## 🛠 Решение проблем
-
-### Ошибка подключения к БД
-- Проверьте, что MySQL запущен
-- Убедитесь, что пароль в `.env` верный
-- Проверьте, что БД создана: `mysql -u root -p -e "SHOW DATABASES;"`
-
-### Ошибка импорта easyApi
-- Убедитесь, что вы в папке проекта
-- Проверьте, что easyApi установлена: `pip install -e ../easyApi`
-
-### Порт 5000 занят
-- Измените порт в `app.py`: `kit.run(port=5001)`
-
----
-
-**Приятных покупок! 🎵**

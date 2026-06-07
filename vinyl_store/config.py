@@ -1,35 +1,35 @@
-"""Конфигурация приложения VinylVault."""
+"""Configuration for the Vintage Vinyl Store diploma project."""
+
+from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 
-# Настройки базы данных
-DB_HOST = os.getenv("VINYL_DB_HOST", "localhost")
-DB_USER = os.getenv("VINYL_DB_USER", "root")
-DB_PASSWORD = os.getenv("VINYL_DB_PASSWORD", "")
-DB_NAME = os.getenv("VINYL_DB_NAME", "vinyl_store")
-DB_PORT = int(os.getenv("VINYL_DB_PORT", "3306"))
 
-# Секретный ключ для сессий и JWT
-SECRET_KEY = os.getenv("VINYL_SECRET_KEY", "vinyl-vault-secret-key-change-in-production")
+@dataclass(frozen=True)
+class AppConfig:
+    """Application settings mapped to EasyApi configuration keys."""
 
-# JWT настройки
-JWT_EXPIRATION_HOURS = int(os.getenv("VINYL_JWT_EXPIRATION_HOURS", "72"))
+    db_host: str = os.getenv("DB_HOST", os.getenv("EASYAPI_DB_HOST", "localhost"))
+    db_user: str = os.getenv("DB_USER", os.getenv("EASYAPI_DB_USER", "root"))
+    db_password: str = os.getenv("DB_PASSWORD", os.getenv("EASYAPI_DB_PASSWORD", ""))
+    db_name: str = os.getenv("DB_NAME", os.getenv("EASYAPI_DB_NAME", "vinyl_store"))
+    db_port: int = int(os.getenv("DB_PORT", os.getenv("EASYAPI_DB_PORT", "3306")))
+    secret_key: str = os.getenv("SECRET_KEY", os.getenv("EASYAPI_SECRET_KEY", "change-vintage-vinyl-secret"))
+    jwt_expiration_hours: int = int(os.getenv("JWT_EXPIRATION_HOURS", os.getenv("EASYAPI_JWT_EXPIRATION_HOURS", "72")))
+    upload_folder: str = os.getenv("UPLOAD_FOLDER", "uploads")
 
-# Настройки приложения
-APP_NAME = "VinylVault"
-APP_VERSION = "1.0.0"
 
-# Пагинация
-PRODUCTS_PER_PAGE = 12
-ORDERS_PER_PAGE = 20
+def easyapi_settings(config: AppConfig | None = None) -> dict[str, object]:
+    """Return settings in the format expected by the custom EasyApi library."""
 
-# Загрузка файлов
-UPLOAD_FOLDER = "static/images/products"
-MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
-
-# Доставка
-SHIPPING_COST_FREE_THRESHOLD = 5000  # Бесплатная доставка от 5000₽
-SHIPPING_COST_STANDARD = 300  # Стандартная доставка
-
-# Фейковая оплата
-PAYMENT_SUCCESS_RATE = 0.95  # 95% успешных платежей
+    cfg = config or AppConfig()
+    return {
+        "DB_HOST": cfg.db_host,
+        "DB_USER": cfg.db_user,
+        "DB_PASSWORD": cfg.db_password,
+        "DB_NAME": cfg.db_name,
+        "DB_PORT": cfg.db_port,
+        "SECRET_KEY": cfg.secret_key,
+        "JWT_EXPIRATION_HOURS": cfg.jwt_expiration_hours,
+    }
