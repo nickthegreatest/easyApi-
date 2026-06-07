@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VinylVault — Магазин виниловых пластинок</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Навигация -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="/" class="logo">
+                <span class="logo-icon">🎵</span>
+                <span class="logo-text">VinylVault</span>
+            </a>
+            
+            <div class="nav-search">
+                <input type="text" id="searchInput" placeholder="Поиск пластинок..." class="search-input">
+                <button onclick="search()" class="search-btn">🔍</button>
+            </div>
+            
+            <div class="nav-links">
+                <a href="/catalog" class="nav-link">Каталог</a>
+                <a href="/new" class="nav-link">Новинки</a>
+                <a href="/sale" class="nav-link">Скидки</a>
+            </div>
+            
+            <div class="nav-actions">
+                <button onclick="toggleCart()" class="cart-btn">
+                    🛒 <span id="cartCount" class="cart-count">0</span>
+                </button>
+                <div id="authSection">
+                    <button onclick="showLoginModal()" class="btn-outline">Войти</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Основной контент -->
+    <main id="mainContent">
+        <!-- Динамически загружается -->
+    </main>
+
+    <!-- Корзина (боковая панель) -->
+    <div id="cartSidebar" class="cart-sidebar">
+        <div class="cart-overlay" onclick="toggleCart()"></div>
+        <div class="cart-content">
+            <div class="cart-header">
+                <h2>Корзина</h2>
+                <button onclick="toggleCart()" class="close-btn">✕</button>
+            </div>
+            <div id="cartItems" class="cart-items">
+                <!-- Товары корзины -->
+            </div>
+            <div id="cartTotal" class="cart-total">
+                <!-- Итого -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно входа/регистрации -->
+    <div id="authModal" class="modal">
+        <div class="modal-overlay" onclick="closeAuthModal()"></div>
+        <div class="modal-content">
+            <button onclick="closeAuthModal()" class="modal-close">✕</button>
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">Вход</button>
+                <button class="auth-tab" data-tab="register">Регистрация</button>
+            </div>
+            
+            <form id="loginForm" class="auth-form">
+                <h3>Вход</h3>
+                <input type="text" id="loginUsername" placeholder="Username или email" required>
+                <input type="password" id="loginPassword" placeholder="Пароль" required>
+                <button type="submit" class="btn-primary">Войти</button>
+                <p id="loginError" class="error-text"></p>
+            </form>
+            
+            <form id="registerForm" class="auth-form hidden">
+                <h3>Регистрация</h3>
+                <input type="text" id="regUsername" placeholder="Username" required>
+                <input type="email" id="regEmail" placeholder="Email" required>
+                <input type="password" id="regPassword" placeholder="Пароль" required>
+                <input type="text" id="regFirstName" placeholder="Имя">
+                <input type="text" id="regLastName" placeholder="Фамилия">
+                <button type="submit" class="btn-primary">Зарегистрироваться</button>
+                <p id="registerError" class="error-text"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Уведомления -->
+    <div id="notifications" class="notifications"></div>
+
+    <!-- Футер -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h4>VinylVault</h4>
+                    <p>Лучший магазин виниловых пластинок с 2024 года</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Категории</h4>
+                    <ul id="footerCategories"></ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Помощь</h4>
+                    <ul>
+                        <li><a href="#">Доставка</a></li>
+                        <li><a href="#">Оплата</a></li>
+                        <li><a href="#">Возврат</a></li>
+                        <li><a href="#">Контакты</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Мы принимаем</h4>
+                    <div class="payment-methods">
+                        <span>💳 Visa</span>
+                        <span>💳 Mastercard</span>
+                        <span>💳 МИР</span>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 VinylVault. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
