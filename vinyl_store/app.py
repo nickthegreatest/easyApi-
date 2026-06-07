@@ -1,7 +1,11 @@
 """VinylVault — интернет-магазин виниловых пластинок."""
 
 import os
+import sys
 from pathlib import Path
+
+# Добавляем текущую директорию в путь для импорта vinyl_store
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from dotenv import load_dotenv
 from flask import Flask, send_from_directory
